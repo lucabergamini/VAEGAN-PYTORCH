@@ -20,20 +20,20 @@ if __name__ == "__main__":
     writer = SummaryWriter(comment="_CELEBA_loss_1_full")
     net = VaeGan().cuda()
     # DATASET
-    dataloader = torch.utils.data.DataLoader(CELEBA("/home/lapis/Desktop/img_align_celeba/"), batch_size=64,
-                                             shuffle=True, num_workers=2)
+    dataloader = torch.utils.data.DataLoader(CELEBA("/home/lapis/Desktop/img_align_celeba/train/"), batch_size=64,
+                                             shuffle=True, num_workers=7)
     # DATASET for test
     # if you want to split train from test just move some files in another dir
-    dataloader_test = torch.utils.data.DataLoader(CELEBA("/home/lapis/Desktop/img_align_celeba/"), batch_size=64,
+    dataloader_test = torch.utils.data.DataLoader(CELEBA("/home/lapis/Desktop/img_align_celeba/test"), batch_size=64,
                                                   shuffle=False, num_workers=2)
     num_epochs = 13
     # OPTIM-LOSS
     # an optimizer for each of the sub-networks, so we can selectively backprop
-    optimizer_encoder = RMSprop(params=net.encoder.parameters(), lr=0.0001)
+    optimizer_encoder = RMSprop(params=net.encoder.parameters(), lr=0.0002)
     lr_encoder = ExponentialLR(optimizer_encoder, gamma=0.985)
-    optimizer_decoder = RMSprop(params=net.decoder.parameters(), lr=0.0001)
+    optimizer_decoder = RMSprop(params=net.decoder.parameters(), lr=0.0002)
     lr_decoder = ExponentialLR(optimizer_decoder, gamma=0.985)
-    optimizer_discriminator = RMSprop(params=net.discriminator.parameters(), lr=0.0001)
+    optimizer_discriminator = RMSprop(params=net.discriminator.parameters(), lr=0.0002)
     lr_discriminator = ExponentialLR(optimizer_discriminator, gamma=0.985)
 
     batch_number = len(dataloader)
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         writer.add_scalar('loss_discriminator', loss_discriminator_mean.measure, step_index)
         writer.add_scalar('loss_reconstruction', loss_nle_mean.measure, step_index)
 
-        for j, (data_batch, labels_batch) in enumerate(dataloader_test):
+        for j, data_batch in enumerate(dataloader_test):
             data_in = Variable(data_batch, requires_grad=True).float().cuda()
             out = net(data_in)
             out = out[0].data.cpu()
