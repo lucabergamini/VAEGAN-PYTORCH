@@ -170,7 +170,7 @@ class Discriminator(nn.Module):
 
         ten = ten.view(len(ten), -1)
         ten = self.fc(ten)
-        return F.sigmoid(ten), layer_ten
+        return ten, layer_ten
 
     def __call__(self, *args, **kwargs):
         return super(Discriminator, self).__call__(*args, **kwargs)
@@ -246,17 +246,17 @@ class VaeGan(nn.Module):
         # kl-divergence
         kl = torch.mean(0.5 * torch.sum(variances.exp() + mus ** 2 - variances - 1, 1))
         # mse between intermediate layers
-        mse = torch.mean(torch.sum((layer_original - layer_predicted) ** 2, 1))
+        mse = torch.mean(0.5*torch.sum((layer_original - layer_predicted) ** 2, 1))
         # bce for decoder and discriminator for original,sampled and reconstructed
         # the only excluded is the bce_gen_original
-        bce_gen_predicted = nn.BCELoss()(labels_predicted,
+        bce_gen_predicted = nn.BCEWithLogitsLoss()(labels_predicted,
                                          Variable(torch.ones_like(labels_predicted.data).cuda(), requires_grad=False))
-        bce_gen_sampled = nn.BCELoss()(labels_sampled,
+        bce_gen_sampled = nn.BCEWithLogitsLoss()(labels_sampled,
                                        Variable(torch.ones_like(labels_sampled.data).cuda(), requires_grad=False))
-        bce_dis_original = nn.BCELoss()(labels_original,
+        bce_dis_original = nn.BCEWithLogitsLoss()(labels_original,
                                         Variable(torch.ones_like(labels_original.data).cuda(), requires_grad=False))
-        bce_dis_predicted = nn.BCELoss()(labels_predicted,
+        bce_dis_predicted = nn.BCEWithLogitsLoss()(labels_predicted,
                                          Variable(torch.zeros_like(labels_predicted.data).cuda(), requires_grad=False))
-        bce_dis_sampled = nn.BCELoss()(labels_sampled,
+        bce_dis_sampled = nn.BCEWithLogitsLoss()(labels_sampled,
                                        Variable(torch.zeros_like(labels_sampled.data).cuda(), requires_grad=False))
         return nle, kl, mse, bce_gen_predicted, bce_gen_sampled, bce_dis_original, bce_dis_predicted, bce_dis_sampled
