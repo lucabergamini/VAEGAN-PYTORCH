@@ -54,7 +54,13 @@ wcwidth==0.1.7
 Werkzeug==0.12.2
 ```
 ## Visual Results
-Still to come, networks are running.
+Results after 13 epochs using lr=0.0001
+
+![Alt text](/results/original.png?raw=true "Original")
+![Alt text](/results/recon.png?raw=true "Reconstructed")
+![Alt text](/results/sampled.png?raw=true "Sampled")
+
+Reconstructed are not bad (images never seen before), still generated could be better.
 
 ## Implementation details
 So, using GAN makes training REALLY unstable. In every moment the generator or the descriminator could collapse, rendering awful results. As such, some tricks have been employed in the original implementation (and also here) to try to solve this instability:
@@ -105,7 +111,7 @@ Nothing special to say here, including the reconstructed loss seems to lower the
 
 ## TODO
 - [x] requirements
-- [ ] visual results
+- [x] visual results
 - [ ] TB log
 - [x] theory explanation
 - [x] implementation details
