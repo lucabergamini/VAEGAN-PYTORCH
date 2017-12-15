@@ -66,9 +66,9 @@ class CELEBA_SLURM(Dataset):
 
     def __init__(self, data_folder):
         #open the file
-        self.file = open(os.path.join(data_folder,"imgs"),"rb")
+        self.file = open(os.path.join(data_folder,"train"),"rb")
         #get len
-        self.len = int(os.path.getsize(os.path.join(data_folder,"imgs"))/(64*64*3))
+        self.len = int(os.path.getsize(os.path.join(data_folder,"train"))/(64*64*3))
     def __len__(self):
         return self.len
 
@@ -82,22 +82,23 @@ class CELEBA_SLURM(Dataset):
         :return: image
         """
         offset = item*3*64*64
-        data = numpy.fromfile(self.file.seek(offset), dtype=numpy.uint8, count=(3 * 64 * 64))
+        self.file.seek(offset)
+        data = numpy.fromfile(self.file, dtype=numpy.uint8, count=(3 * 64 * 64))
         data = numpy.reshape(data, newshape=(3, 64, 64))
         data = data.astype("float32") / 127.5 - 1.0
         return (data.copy(),data.copy())
 
 
 if __name__ == "__main__":
-    dataset = CELEBA("/home/lapis/Desktop/img_align_celeba/test")
-    gen = DataLoader(dataset, batch_size=128, shuffle=False,num_workers=7)
-    file = open("test",mode="wb+")
+    dataset = CELEBA_SLURM(".")
+    gen = DataLoader(dataset, batch_size=128, shuffle=False,num_workers=1)
+    #file = open("test",mode="wb+")
     from matplotlib import pyplot
     imgs = []
     for i,(b,l) in enumerate(gen):
         print("{}:{}".format(i,len(gen)))
-        b.numpy().astype("uint8").tofile(file)
-    file.close()
+        #b.numpy().astype("uint8").tofile(file)
+    #file.close()
 
 
     #for i in range(1000):
