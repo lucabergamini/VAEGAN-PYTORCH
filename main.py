@@ -211,7 +211,7 @@ if __name__ == "__main__":
                 optimizer_discriminator.step()
 
             # LOGGING
-            if not slurm:
+            if  slurm:
                 progress.update(progress.value + 1, loss_nle=loss_nle_mean.measure,
                                loss_encoder=loss_encoder_mean.measure,
                                loss_decoder=loss_decoder_mean.measure,
