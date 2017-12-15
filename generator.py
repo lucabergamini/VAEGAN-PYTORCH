@@ -66,9 +66,9 @@ class CELEBA_SLURM(Dataset):
 
     def __init__(self, data_folder):
         #open the file
-        self.file = open(os.path.join(data_folder,"train"),"rb")
+        self.file = open(os.path.join(data_folder,"imgs"),"rb")
         #get len
-        self.len = int(os.path.getsize(os.path.join(data_folder,"train"))/(64*64*3))
+        self.len = int(os.path.getsize(os.path.join(data_folder,"imgs"))/(64*64*3))
     def __len__(self):
         return self.len
 
