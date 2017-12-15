@@ -29,6 +29,8 @@ if __name__ == "__main__":
     parser.add_argument("--decay_mse",default=1,action="store",type=float,dest="decay_mse")
     parser.add_argument("--decay_margin",default=1,action="store",type=float,dest="decay_margin")
     parser.add_argument("--decay_equilibrium",default=1,action="store",type=float,dest="decay_equilibrium")
+    parser.add_argument("--verbose",default=True,action="store",type=bool,dest="verbose")
+
 
     args = parser.parse_args()
 
@@ -43,6 +45,7 @@ if __name__ == "__main__":
     lr = args.lr
     decay_lr = args.decay_lr
     decay_equilibrium = args.decay_equilibrium
+    verbose = args.verbose
 
     writer = SummaryWriter(comment="_CELEBA_NEW_DATA_STOCK_GAN")
     net = VaeGan(z_size=z_size,recon_level=recon_level).cuda()
@@ -97,7 +100,10 @@ if __name__ == "__main__":
         progressbar.DynamicMessage("epoch")
     ]
     # for each epoch
+    if verbose:
+        print(args)
     for i in range(n_epochs):
+
         progress = progressbar.ProgressBar(min_value=0, max_value=batch_number, initial_value=0,
                                            widgets=widgets).start()
         # reset rolling average
@@ -113,6 +119,7 @@ if __name__ == "__main__":
 
         # for each batch
         for j, (data_batch,target_batch) in enumerate(dataloader):
+
             # set to train mode
             net.train()
             # target and input are the same images
