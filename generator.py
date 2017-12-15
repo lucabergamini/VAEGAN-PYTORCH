@@ -2,9 +2,21 @@ import numpy
 import os
 from torch.utils.data import Dataset, DataLoader
 import cv2
-
+from skimage import filters,transform
+from matplotlib import pyplot
 numpy.random.seed(5)
 
+def _resize(img):
+    rescale_size = 64
+    bbox = (40, 218 - 30, 15, 178 - 15)
+    img = img[bbox[0]:bbox[1], bbox[2]:bbox[3]]
+    # Smooth image before resize to avoid moire patterns
+    scale = img.shape[0] / float(rescale_size)
+    sigma = numpy.sqrt(scale) / 2.0
+    img = filters.gaussian(img, sigma=sigma, multichannel=True)
+    img = transform.resize(img, (rescale_size, rescale_size, 3), order=3,mode="constant")
+    img = (img*255).astype(numpy.uint8)
+    return img
 
 class CELEBA(Dataset):
     """
@@ -16,7 +28,13 @@ class CELEBA(Dataset):
         self.len = len(os.listdir(data_folder))
         #list of file names
         self.data_names = [os.path.join(data_folder, name) for name in sorted(os.listdir(data_folder))]
+        #data_all
+        #if "train" in data_folder:
+        #    self.data = numpy.load("/home/lapis/Desktop/full_train.npy")
+        #else:
+        #    self.data = numpy.load("/home/lapis/Desktop/full_test.npy")
 
+        self.len = len(self.data_names)
     def __len__(self):
         return self.len
 
@@ -30,28 +48,30 @@ class CELEBA(Dataset):
         :return: image
         """
         #load image,crop 128x128,resize,transpose(to channel first),scale (so we can use tanh)
-
         data = cv2.cvtColor(cv2.imread(self.data_names[item]), cv2.COLOR_BGR2RGB)
-        c_x = data.shape[1] // 2
-        c_y = data.shape[0] // 2
-        data = data[c_y - 64:c_y + 64, c_x - 64:c_x + 64]
-        data = cv2.resize(data, (64, 64))
+
+        data = _resize(data)
+
         # CHANNEL FIRST
         data = data.transpose(2, 0, 1)
         # TANH
-        data = data.astype("float32") / 255.0 * 2 - 1
-        return data
+        data = data.astype("float32") / 127.5 - 1.0
+
+        return (data.copy(),data.copy())
 
 
 if __name__ == "__main__":
-    dataset = CELEBA("/home/lapis/Desktop/img_align_celeba/")
-    gen = DataLoader(dataset, batch_size=3, shuffle=True)
+    dataset = CELEBA("/home/lapis/Desktop/img_align_celeba/train")
+    gen = DataLoader(dataset, batch_size=1, shuffle=False)
     from matplotlib import pyplot
+    for b,l in gen:
+        pass
 
-    for i in range(10):
-        a = gen.__iter__().next()
+    #for i in range(1000):
+
+    #    a = gen.__iter__().next()
         #scale between (0,1)
-        a = (a + 1) / 2
-        for el in a:
-            pyplot.imshow(numpy.transpose(el.numpy(), (1, 2, 0)))
-            pyplot.show()
+        #a = (a + 1) / 2
+        #for el in a:
+        #    pyplot.imshow(numpy.transpose(el.numpy(), (1, 2, 0)))
+        #    pyplot.show()
