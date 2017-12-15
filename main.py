@@ -12,7 +12,7 @@ from torch.optim import RMSprop,Adam,SGD
 from torch.optim.lr_scheduler import ExponentialLR,MultiStepLR
 import progressbar
 from torchvision.utils import make_grid
-from generator import CELEBA
+from generator import CELEBA,CELEBA_SLURM
 from utils import RollingMeasure
 
 if __name__ == "__main__":
@@ -29,8 +29,7 @@ if __name__ == "__main__":
     parser.add_argument("--decay_mse",default=1,action="store",type=float,dest="decay_mse")
     parser.add_argument("--decay_margin",default=1,action="store",type=float,dest="decay_margin")
     parser.add_argument("--decay_equilibrium",default=1,action="store",type=float,dest="decay_equilibrium")
-    parser.add_argument("--verbose",default=True,action="store",type=bool,dest="verbose")
-
+    parser.add_argument("--slurm",default=False,action="store",type=bool,dest="slurm")
 
     args = parser.parse_args()
 
@@ -45,18 +44,26 @@ if __name__ == "__main__":
     lr = args.lr
     decay_lr = args.decay_lr
     decay_equilibrium = args.decay_equilibrium
-    verbose = args.verbose
+    slurm = args.slurm
 
     writer = SummaryWriter(comment="_CELEBA_NEW_DATA_STOCK_GAN")
     net = VaeGan(z_size=z_size,recon_level=recon_level).cuda()
 
     # DATASET
-    dataloader = torch.utils.data.DataLoader(CELEBA(train_folder), batch_size=64,
-                                             shuffle=True, num_workers=1)
-    # DATASET for test
-    # if you want to split train from test just move some files in another dir
-    dataloader_test = torch.utils.data.DataLoader(CELEBA(test_folder), batch_size=100,
-                                                  shuffle=False, num_workers=1)
+    if not slurm:
+        dataloader = torch.utils.data.DataLoader(CELEBA(train_folder), batch_size=64,
+                                                 shuffle=True, num_workers=4)
+        # DATASET for test
+        # if you want to split train from test just move some files in another dir
+        dataloader_test = torch.utils.data.DataLoader(CELEBA(test_folder), batch_size=100,
+                                                      shuffle=False, num_workers=1)
+    else:
+        dataloader = torch.utils.data.DataLoader(CELEBA_SLURM(train_folder), batch_size=64,
+                                                 shuffle=True, num_workers=1)
+        # DATASET for test
+        # if you want to split train from test just move some files in another dir
+        dataloader_test = torch.utils.data.DataLoader(CELEBA_SLURM(test_folder), batch_size=100,
+                                                      shuffle=False, num_workers=1)
     #margin and equilibirum
     margin = 0.35
     equilibrium = 0.68
@@ -100,7 +107,7 @@ if __name__ == "__main__":
         progressbar.DynamicMessage("epoch")
     ]
     # for each epoch
-    if verbose:
+    if slurm:
         print(args)
     for i in range(n_epochs):
 
@@ -204,15 +211,24 @@ if __name__ == "__main__":
                 optimizer_discriminator.step()
 
             # LOGGING
-            progress.update(progress.value + 1, loss_nle=loss_nle_mean.measure,
-                           loss_encoder=loss_encoder_mean.measure,
-                           loss_decoder=loss_decoder_mean.measure,
-                           loss_discriminator=loss_discriminator_mean.measure,
-                           loss_mse_layer=loss_reconstruction_layer_mean.measure,
-                           loss_kld=loss_kld_mean.measure,
-                           epoch=i + 1)
+            if not slurm:
+                progress.update(progress.value + 1, loss_nle=loss_nle_mean.measure,
+                               loss_encoder=loss_encoder_mean.measure,
+                               loss_decoder=loss_decoder_mean.measure,
+                               loss_discriminator=loss_discriminator_mean.measure,
+                               loss_mse_layer=loss_reconstruction_layer_mean.measure,
+                               loss_kld=loss_kld_mean.measure,
+                               epoch=i + 1)
 
         # EPOCH END
+        if slurm:
+            progress.update(progress.value + 1, loss_nle=loss_nle_mean.measure,
+                            loss_encoder=loss_encoder_mean.measure,
+                            loss_decoder=loss_decoder_mean.measure,
+                            loss_discriminator=loss_discriminator_mean.measure,
+                            loss_mse_layer=loss_reconstruction_layer_mean.measure,
+                            loss_kld=loss_kld_mean.measure,
+                            epoch=i + 1)
         lr_encoder.step()
         lr_decoder.step()
         lr_discriminator.step()
