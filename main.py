@@ -16,6 +16,7 @@ from generator import CELEBA
 from utils import RollingMeasure
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description="VAEGAN")
     parser.add_argument("--train_folder",action="store",dest="train_folder")
     parser.add_argument("--test_folder",action="store",dest="test_folder")
@@ -28,6 +29,7 @@ if __name__ == "__main__":
     parser.add_argument("--decay_mse",default=1,action="store",type=float,dest="decay_mse")
     parser.add_argument("--decay_margin",default=1,action="store",type=float,dest="decay_margin")
     parser.add_argument("--decay_equilibrium",default=1,action="store",type=float,dest="decay_equilibrium")
+
     args = parser.parse_args()
 
     train_folder = args.train_folder

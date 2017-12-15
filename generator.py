@@ -3,7 +3,6 @@ import os
 from torch.utils.data import Dataset, DataLoader
 import cv2
 from skimage import filters,transform
-from matplotlib import pyplot
 numpy.random.seed(5)
 
 def _resize(img):
@@ -69,7 +68,7 @@ if __name__ == "__main__":
 
     #for i in range(1000):
 
-    #    a = gen.__iter__().next()
+        #a = gen.__iter__().next()
         #scale between (0,1)
         #a = (a + 1) / 2
         #for el in a:
