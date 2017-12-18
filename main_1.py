@@ -69,15 +69,12 @@ if __name__ == "__main__":
     #mse_lambda = 1.0
     # OPTIM-LOSS
     # an optimizer for each of the sub-networks, so we can selectively backprop
-    #optimizer_encoder = Adam(params=net.encoder.parameters(),lr = lr,betas=(0.9,0.999))
     optimizer_encoder = RMSprop(params=net.encoder.parameters(),lr=lr,alpha=0.9,eps=1e-8,weight_decay=0,momentum=0,centered=False)
     #lr_encoder = MultiStepLR(optimizer_encoder,milestones=[2],gamma=1)
     lr_encoder = ExponentialLR(optimizer_encoder, gamma=decay_lr)
-    #optimizer_decoder = Adam(params=net.decoder.parameters(),lr = lr,betas=(0.9,0.999))
     optimizer_decoder = RMSprop(params=net.decoder.parameters(),lr=lr,alpha=0.9,eps=1e-8,weight_decay=0,momentum=0,centered=False)
     lr_decoder = ExponentialLR(optimizer_decoder, gamma=decay_lr)
     #lr_decoder = MultiStepLR(optimizer_decoder,milestones=[2],gamma=1)
-    #optimizer_discriminator = Adam(params=net.discriminator.parameters(),lr = lr,betas=(0.9,0.999))
     optimizer_discriminator = RMSprop(params=net.discriminator.parameters(),lr=lr,alpha=0.9,eps=1e-8,weight_decay=0,momentum=0,centered=False)
     lr_discriminator = ExponentialLR(optimizer_discriminator, gamma=decay_lr)
     #lr_discriminator = MultiStepLR(optimizer_discriminator,milestones=[2],gamma=1)
@@ -151,12 +148,13 @@ if __name__ == "__main__":
             # THIS IS THE MOST IMPORTANT PART OF THE CODE
             loss_encoder = torch.sum(kl_value)+torch.sum(mse_value_1)+torch.sum(mse_value_2)
             loss_discriminator = torch.sum(bce_dis_original_value) + torch.sum(bce_dis_sampled_value)+ torch.sum(bce_dis_predicted_value)
-            loss_decoder = torch.sum(lambda_mse/2 * mse_value_1)+ torch.sum(lambda_mse/2 * mse_value_2) - (1.0 - lambda_mse) * loss_discriminator
+            loss_decoder = torch.sum(bce_gen_sampled_value) + torch.sum(bce_gen_predicted_value)
+            loss_decoder = torch.sum(lambda_mse/2 * mse_value_1)+ torch.sum(lambda_mse/2 * mse_value_2) - (1.0 - lambda_mse) * loss_decoder
 
             # register mean values of the losses for logging
             loss_nle_mean(torch.mean(nle_value).data.cpu().numpy()[0])
             loss_discriminator_mean((torch.mean(bce_dis_original_value) + torch.mean(bce_dis_sampled_value)).data.cpu().numpy()[0])
-            loss_decoder_mean((torch.mean(lambda_mse * mse_value_1/2)+torch.mean(lambda_mse * mse_value_2/2) - (1 - lambda_mse) * (torch.mean(bce_dis_original_value) + torch.mean(bce_dis_sampled_value))).data.cpu().numpy()[0])
+            loss_decoder_mean((torch.mean(lambda_mse * mse_value_1/2)+torch.mean(lambda_mse * mse_value_2/2) - (1 - lambda_mse) * (torch.mean(bce_gen_predicted_value) + torch.mean(bce_gen_sampled_value))).data.cpu().numpy()[0])
 
             loss_encoder_mean((torch.mean(kl_value) + torch.mean(mse_value_1)+ torch.mean(mse_value_2)).data.cpu().numpy()[0])
             loss_reconstruction_layer_mean((torch.mean(mse_value_1)+torch.mean(mse_value_2)).data.cpu().numpy()[0])
@@ -272,3 +270,4 @@ if __name__ == "__main__":
             break
 
         step_index += 1
+    exit(0)

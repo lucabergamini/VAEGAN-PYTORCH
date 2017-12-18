@@ -274,3 +274,4 @@ if __name__ == "__main__":
             break
 
         step_index += 1
+    exit(0)
